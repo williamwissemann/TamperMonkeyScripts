@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         Monarch Money (Chart)
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      0.2
 // @description  Monarch Money (Chart)
-// @author       You
+// @author       William T. Wissemann
 // @match        https://app.monarchmoney.com/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=monarchmoney.com
 // @grant        none
@@ -31,14 +31,14 @@ function createGraphOption(data) {
             'client-platform': 'web',
             'content-type': 'application/json',
             origin: 'https://app.monarchmoney.com',
-            'sec-ch-ua': '"Brave";v="119", "Chromium";v="119", "Not?A_Brand";v="24"',
+            // 'sec-ch-ua': '"Brave";v="119", "Chromium";v="119", "Not?A_Brand";v="24"',
             'sec-ch-ua-mobile': '?0',
             'sec-ch-ua-platform': '"macOS"',
             'sec-fetch-dest': 'empty',
             'sec-fetch-mode': 'cors',
             'sec-fetch-site': 'same-site',
             'sec-gpc': '1',
-            'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+            'user-agent': navigator.userAgent,
         },
         body: JSON.stringify(data),
     };
@@ -309,6 +309,7 @@ function drawNetworthChart(chart) {
                 snapshotsByAccountType.style.display = "block";
                 snapshotsByAccountType.className = "TM_snapshotsByAccountType";
                 chart_div.appendChild(snapshotsByAccountType);
+
                 scroll_root.insertBefore(chart_div, scroll_root.children[0])
 
                 const chart_div_2 = document.createElement("div");
@@ -327,6 +328,7 @@ function drawNetworthChart(chart) {
                 networthChart.style.display = "block";
                 networthChart.className = "TM_networthChart";
                 chart_div_2.appendChild(networthChart);
+
                 scroll_root.insertBefore(chart_div_2, scroll_root.children[1])
 
                 drawSnapshotsByAccountType(snapshotsByAccountType);
