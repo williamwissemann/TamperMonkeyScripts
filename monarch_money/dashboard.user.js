@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Monarch Money (Chart)
 // @namespace    http://tampermonkey.net/
-// @version      0.2
+// @version      0.3
 // @description  Monarch Money (Chart)
 // @author       William T. Wissemann
 // @match        https://app.monarchmoney.com/*
@@ -243,7 +243,12 @@ function drawNetworthChart(chart) {
         getAccountPageRecentBalance()
             .then(d => {
             // Process the data received from the API
-            const data = d.data.accounts.filter(object => persist_filters.accounts.includes(object.id));
+            let data = null;
+             if (persist_filters.accounts !== undefined) {
+                 data = d.data.accounts.filter(oblengthject => persist_filters.accounts.includes(object.id));
+             } else {
+                 data = d.data.accounts
+             }
 
             const accountTypes = []
             for (let i = 0; i < data.length; i++) {
