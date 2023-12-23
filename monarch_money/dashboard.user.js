@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Monarch Money (Charts)
 // @namespace    http://tampermonkey.net/
-// @version      0.4
+// @version      0.5
 // @description  Monarch Money (Charts)
 // @author       William T. Wissemann
 // @match        https://app.monarchmoney.com/*
@@ -161,7 +161,7 @@ function recentBalancesMerge(data, label) {
     return dataset
 }
 
-function chartStyleOption() {
+function chartStyleOption(title) {
     let labels = {
         fontColor: 'rgba(256, 256, 256)'
     };
@@ -181,6 +181,12 @@ function chartStyleOption() {
         resizeDelay: 1000,
         legend: {
             labels: labels,
+        },
+        plugins: {
+            title: {
+                display: true,
+                text: title,
+            }
         },
         scales: {
             x: {
@@ -238,6 +244,7 @@ function drawSnapshotsByAccountType(chart) {
                     borderColor: accountTypeToColor("Net Worth", "255"),
                     backgroundColor: accountTypeToColor("Net Worth", "0.2"),
                     data: [],
+                    fill: true,
                     borderWidth: 2,
                     pointRadius: 0,
                     hidden: false
@@ -270,6 +277,7 @@ function drawSnapshotsByAccountType(chart) {
                     data: balances,
                     borderColor: accountTypeToColor(selectedAccountDisplay, "255"),
                     backgroundColor: accountTypeToColor(selectedAccountDisplay, "0.2"),
+                    fill: true,
                     borderWidth: 2,
                     pointRadius: 0,
                     hidden: !["brokerage", "depository"].includes(selectedAccountType)
@@ -292,7 +300,7 @@ function drawSnapshotsByAccountType(chart) {
                 data: {
                     datasets,
                 },
-                options: chartStyleOption()
+                options: chartStyleOption('ACCOUNT TRENDS: WITHOUT FILTERS')
             });
         })
             .catch((error) => {
@@ -342,7 +350,7 @@ function drawNetworthChart(chart) {
                 data: {
                     datasets,
                 },
-                options: chartStyleOption()
+                options: chartStyleOption('ACCOUNT TRENDS: REPORT FILTERS')
             });
         }).catch((error) => {
             console.error(error);
@@ -407,5 +415,5 @@ function createChartDiv(claseName){
                 localStorage["tm:DarkLightMode"] = getStyle();
             }, 1000);
         }
-    }, 5000);
+    }, 3000);
 })();
