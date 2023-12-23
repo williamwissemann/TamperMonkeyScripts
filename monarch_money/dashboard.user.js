@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         Monarch Money (Chart)
+// @name         Monarch Money (Charts)
 // @namespace    http://tampermonkey.net/
-// @version      0.3
-// @description  Monarch Money (Chart)
+// @version      0.4
+// @description  Monarch Money (Charts)
 // @author       William T. Wissemann
 // @match        https://app.monarchmoney.com/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=monarchmoney.com
@@ -15,9 +15,36 @@
 const graphql = 'https://api.monarchmoney.com/graphql';
 const START_DATE = '2010-01-01';
 
+function accountTypeToColor(accountType, alpha){
+    const lookup = {
+      "Net Worth": `rgba(55, 162, 235, ${alpha})`, // blue
+      "Credit Cards": `rgba(255, 159, 65, ${alpha})`, // orange
+      "Loans": `rgba(255, 99, 132, ${alpha})`, // red
+      "Investments": `rgba(255, 205, 87, ${alpha})`, // yellow
+      "Cash": `rgba(76, 192, 192, ${alpha})`, // green
+      "Real Estate": `rgba(153, 102, 255, ${alpha})`, // purple
+      "Valuables": `rgba(201, 203, 207, ${alpha})`, // gray
+      "Vehicles": `rgba(55, 162, 235, ${alpha})`, // blue
+    };
+
+    return lookup[accountType];
+}
+
+
 function getPersistReports() {
     return JSON.parse(JSON.parse(localStorage.getItem("persist:reports")).filters);
 }
+
+function getStyle() {
+    const cssObj = window.getComputedStyle(document.querySelectorAll("[class*=Page__Root]")[0], null);
+    let bgColor = cssObj.getPropertyValue("background-color");
+    if (bgColor == 'rgb(8, 32, 67)') {
+       return "dark";
+    } else {
+       return "light";
+    }
+}
+
 function getGraphqlToken() {
     return JSON.parse(JSON.parse(localStorage.getItem("persist:root")).user).token;
 }
@@ -116,6 +143,8 @@ function recentBalancesMerge(data, label) {
             let d = new Date(date.getFullYear(), date.getMonth(), date.getDate() + offset);
             return {x: d.toISOString().slice(0, 10) , y: item};
         }),
+        borderColor: accountTypeToColor(label, "255"),
+        backgroundColor: accountTypeToColor(label, "0.2"),
         borderWidth: 1,
         fill: true,
         pointRadius: 0,
@@ -133,24 +162,31 @@ function recentBalancesMerge(data, label) {
 }
 
 function chartStyleOption() {
-    Chart.defaults.color = "rgba(255, 255, 255, 0.7)";
-    Chart.defaults.borderColor = "rgba(255, 255, 255, 0.3)";
+    let labels = {
+        fontColor: 'rgba(256, 256, 256)'
+    };
+    if (getStyle() === 'dark') {
+        Chart.defaults.color = "rgba(255, 255, 255, 0.7)";
+        Chart.defaults.borderColor = "rgba(255, 255, 255, 0.3)";
+        labels = {};
+    } else {
+        Chart.defaults.color = "rgba(0, 0, 0, 0.7)";
+        Chart.defaults.borderColor = "rgba(0, 0, 0, 0.2)";
+        labels = {};
+    }
 
     return {
+        maintainAspectRatio: false,
+        responsive: true,
+        resizeDelay: 1000,
         legend: {
-            labels: {
-                fontColor: 'rgba(255, 255, 255, 0.7)'
-            }
+            labels: labels,
         },
         scales: {
             x: {
                 type: 'time',
                 time: {
                     unit: 'year'
-                },
-                title: {
-                    display: true,
-                    text: 'Date'
                 },
                 border: {
                     dash: [5,8],
@@ -196,7 +232,17 @@ function drawSnapshotsByAccountType(chart) {
             // Get all account types and their groups
             const accountTypes = data.accountTypes;
 
-            const datasets = [];
+
+            const datasets = [{
+                    label: "Net Worth",
+                    borderColor: accountTypeToColor("Net Worth", "255"),
+                    backgroundColor: accountTypeToColor("Net Worth", "0.2"),
+                    data: [],
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    hidden: false
+                }];
+            const netWorth = {}
             for (let i = 0; i < data.accountTypes.length; i++) {
                 // User selects an account type
                 const selectedAccountType = data.accountTypes[i].name;
@@ -204,23 +250,41 @@ function drawSnapshotsByAccountType(chart) {
                 if (selectedAccountDisplay === "Other") {
                     continue;
                 }
+
                 // Filter snapshots by selected account type
                 const filteredSnapshots = data.snapshotsByAccountType.filter(snapshot => snapshot.accountType === selectedAccountType);
                 // Extract relevant data from filtered snapshots
                 // const balances = filteredSnapshots.map(snapshot => snapshot.balance);
                 const balances = filteredSnapshots.map(snapshot => {
                     const date = snapshot.month;
+                    if (netWorth[date] !== undefined) {
+                        netWorth[date].y += snapshot.balance;
+                    } else {
+                        netWorth[date] = {x: date, y: snapshot.balance};
+                    }
                     return {x: date, y: snapshot.balance};
                 });
+
                 const set = {
                     label: selectedAccountDisplay,
                     data: balances,
+                    borderColor: accountTypeToColor(selectedAccountDisplay, "255"),
+                    backgroundColor: accountTypeToColor(selectedAccountDisplay, "0.2"),
                     borderWidth: 2,
                     pointRadius: 0,
                     hidden: !["brokerage", "depository"].includes(selectedAccountType)
                 }
                 datasets.push(set);
             }
+            for (var key in netWorth) {
+                datasets[0].data.push(netWorth[key]);
+            }
+
+            datasets[0].data.sort((a, b) => {
+              // Directly compare string values for efficient sorting:
+              return a.x.localeCompare(b.x);
+            });
+
             // Create a new Chart.js instance
             const ctx = chart.getContext('2d');
             new Chart(ctx, {
@@ -245,7 +309,7 @@ function drawNetworthChart(chart) {
             // Process the data received from the API
             let data = null;
              if (persist_filters.accounts !== undefined) {
-                 data = d.data.accounts.filter(oblengthject => persist_filters.accounts.includes(object.id));
+                 data = d.data.accounts.filter(object => persist_filters.accounts.includes(object.id));
              } else {
                  data = d.data.accounts
              }
@@ -263,7 +327,6 @@ function drawNetworthChart(chart) {
             }
 
             const datasets = []
-
             datasets.push(recentBalancesMerge(data, "Net Worth"));
             for (let i = 0; i < accountTypes.length; i++) {
                 datasets.push(recentBalancesMerge(data.filter(object => [accountTypes[i]].includes(object.type)), accountTypes[i]));
@@ -287,57 +350,61 @@ function drawNetworthChart(chart) {
     });
 }
 
+function createChartDiv(claseName){
+    const chart_div = document.createElement("div");
+    chart_div.className = "TM_CHARTS";
+    chart_div.width = "100%";
+    chart_div.height = "400px";
+    chart_div.margin = "auto";
+    chart_div.style.width = chart_div.width;
+    chart_div.style.height = chart_div.height;
+    chart_div.style.padding = "22px 22px 0px 20px";
+    chart_div.boxShadow = "rgba(0, 0, 0, 0.2) 0px 4px 8px"
+
+    const canvas = document.createElement("canvas");
+    canvas.style.borderRadius = "25px";
+    canvas.width = "100%";
+    canvas.height = "400px";
+    canvas.style.padding = "0px 10px 0px 0px";
+    if (getStyle() === 'dark') {
+      canvas.style.backgroundColor = "rgb(13, 44, 92)";
+    } else {
+      canvas.style.backgroundColor = "rgb(255, 255, 255)";
+    }
+    canvas.style.width = canvas.width;
+    canvas.style.height = canvas.height;
+    canvas.style.display = "block";
+    canvas.className = claseName;
+    chart_div.appendChild(canvas);
+    return [canvas, chart_div];
+}
+
 
 (function() {
     'use strict';
-
     setInterval(() => {
-        if (window.location.pathname=="/dashboard" && document.querySelectorAll("[class*=TM_CHARTS]").length == 0) {
+        if (window.location.pathname=="/dashboard" && (document.querySelectorAll("[class*=TM_CHARTS]").length == 0 || localStorage["tm:DarkLightMode"] !== getStyle())) {
             const injection_interval = setInterval(() => {
+                const tm_charts = document.querySelectorAll("[class*=TM_CHARTS]")
+                if (tm_charts.length > 0 && localStorage["tm:DarkLightMode"] !== getStyle()) {
+                    for (let i = 0; i < tm_charts.length; i++) {
+                        tm_charts[i].remove()
+                    }
+                }
                 // only run the injection_interval once
                 clearInterval(injection_interval);
                 // inject a div at the top of MM's scroll
                 const scroll_root = document.querySelectorAll("[class*=Scroll__Root]")[0]
 
-                const chart_div = document.createElement("div");
-                chart_div.className = "TM_CHARTS";
-                chart_div.style.margin = "auto";
-                chart_div.style.width = "95%";
-                chart_div.style.height = "95%";
-                chart_div.style.padding = "20px 0px 0px 0px";
-                chart_div.boxShadow = "rgba(0, 0, 0, 0.2) 0px 4px 8px"
-                const snapshotsByAccountType = document.createElement("canvas");
-                snapshotsByAccountType.style.borderRadius = "25px";
-                snapshotsByAccountType.style.padding = "0px 20px 0px 0px";
-                snapshotsByAccountType.style.backgroundColor = "rgb(13, 44, 92)";
-                snapshotsByAccountType.style.width = "100%";
-                snapshotsByAccountType.style.display = "block";
-                snapshotsByAccountType.className = "TM_snapshotsByAccountType";
-                chart_div.appendChild(snapshotsByAccountType);
+                const [snapshotsByAccountCanvas, snapshotsByAccountDiv] = createChartDiv("TM_snapshotsByAccountType");
+                scroll_root.insertBefore(snapshotsByAccountDiv, scroll_root.children[0])
+                drawSnapshotsByAccountType(snapshotsByAccountCanvas);
 
-                scroll_root.insertBefore(chart_div, scroll_root.children[0])
+                const [networthCanvas, networthAccountDiv] = createChartDiv("TM_networthChart");
+                scroll_root.insertBefore(networthAccountDiv, scroll_root.children[1])
+                drawNetworthChart(networthCanvas);
 
-                const chart_div_2 = document.createElement("div");
-                chart_div_2.className = "TM_CHARTS";
-                chart_div_2.style.margin = "auto";
-                chart_div_2.style.width = "95%";
-                chart_div_2.style.height = "95%";
-                chart_div_2.style.padding = "10px 0px 0px 0px";
-                chart_div_2.boxShadow = "rgba(0, 0, 0, 0.2) 0px 4px 8px"
-
-                const networthChart = document.createElement("canvas");
-                networthChart.style.borderRadius = "25px";
-                networthChart.style.padding = "0px 20px 0px 0px";
-                networthChart.style.backgroundColor = "rgb(13, 44, 92)";
-                networthChart.style.width = "100%";
-                networthChart.style.display = "block";
-                networthChart.className = "TM_networthChart";
-                chart_div_2.appendChild(networthChart);
-
-                scroll_root.insertBefore(chart_div_2, scroll_root.children[1])
-
-                drawSnapshotsByAccountType(snapshotsByAccountType);
-                drawNetworthChart(networthChart);
+                localStorage["tm:DarkLightMode"] = getStyle();
             }, 1000);
         }
     }, 5000);
