@@ -58,6 +58,7 @@ function createGraphOption(data) {
             'client-platform': 'web',
             'content-type': 'application/json',
             origin: 'https://app.monarchmoney.com',
+            'sec-ch-ua': '"TM Userscript"',
             // 'sec-ch-ua': '"Brave";v="119", "Chromium";v="119", "Not?A_Brand";v="24"',
             'sec-ch-ua-mobile': '?0',
             'sec-ch-ua-platform': '"macOS"',
