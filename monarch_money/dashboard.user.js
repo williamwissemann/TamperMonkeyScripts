@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Monarch Money (Charts)
 // @namespace    http://tampermonkey.net/
-// @version      0.5
+// @version      0.6
 // @description  Monarch Money (Charts)
 // @author       William T. Wissemann
 // @match        https://app.monarchmoney.com/*
@@ -10,6 +10,8 @@
 // @run-at       document-idle
 // @require      https://cdn.jsdelivr.net/npm/chart.js
 // @require      https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js
+// @require      https://cdn.jsdelivr.net/npm/hammerjs@2.0.8
+// @require      https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js
 // ==/UserScript==
 
 const graphql = 'https://api.monarchmoney.com/graphql';
@@ -17,14 +19,14 @@ const START_DATE = '2010-01-01';
 
 function accountTypeToColor(accountType, alpha){
     const lookup = {
-      "Net Worth": `rgba(55, 162, 235, ${alpha})`, // blue
-      "Credit Cards": `rgba(255, 159, 65, ${alpha})`, // orange
-      "Loans": `rgba(255, 99, 132, ${alpha})`, // red
-      "Investments": `rgba(255, 205, 87, ${alpha})`, // yellow
-      "Cash": `rgba(76, 192, 192, ${alpha})`, // green
-      "Real Estate": `rgba(153, 102, 255, ${alpha})`, // purple
-      "Valuables": `rgba(201, 203, 207, ${alpha})`, // gray
-      "Vehicles": `rgba(55, 162, 235, ${alpha})`, // blue
+        "Net Worth": `rgba(55, 162, 235, ${alpha})`, // blue
+        "Credit Cards": `rgba(255, 159, 65, ${alpha})`, // orange
+        "Loans": `rgba(255, 99, 132, ${alpha})`, // red
+        "Investments": `rgba(255, 205, 87, ${alpha})`, // yellow
+        "Cash": `rgba(76, 192, 192, ${alpha})`, // green
+        "Real Estate": `rgba(153, 102, 255, ${alpha})`, // purple
+        "Valuables": `rgba(201, 203, 207, ${alpha})`, // gray
+        "Vehicles": `rgba(55, 162, 235, ${alpha})`, // blue
     };
 
     return lookup[accountType];
@@ -39,9 +41,9 @@ function getStyle() {
     const cssObj = window.getComputedStyle(document.querySelectorAll("[class*=Page__Root]")[0], null);
     let bgColor = cssObj.getPropertyValue("background-color");
     if (bgColor == 'rgb(8, 32, 67)') {
-       return "dark";
+        return "dark";
     } else {
-       return "light";
+        return "light";
     }
 }
 
@@ -59,7 +61,6 @@ function createGraphOption(data) {
             'content-type': 'application/json',
             origin: 'https://app.monarchmoney.com',
             'sec-ch-ua': '"TM Userscript"',
-            // 'sec-ch-ua': '"Brave";v="119", "Chromium";v="119", "Not?A_Brand";v="24"',
             'sec-ch-ua-mobile': '?0',
             'sec-ch-ua-platform': '"macOS"',
             'sec-fetch-dest': 'empty',
@@ -187,6 +188,21 @@ function chartStyleOption(title) {
             title: {
                 display: true,
                 text: title,
+            },
+            zoom: {
+                limits: {
+                    x: {min: 'original', max: 'original'}
+                },
+                zoom: {
+                    wheel: {
+                        enabled: true,
+                        modifierKey: 'shift'
+                    },
+                    pinch: {
+                        enabled: true,
+                    },
+                    mode: 'x',
+                }
             }
         },
         scales: {
@@ -232,81 +248,81 @@ function drawSnapshotsByAccountType(chart) {
                         __typename
                     }
                 }`,
-        })).then(response => response.json())
-            .then(d => {
-            // Process the data received from the API
-            const data = d.data;
-            // Get all account types and their groups
-            const accountTypes = data.accountTypes;
+    })).then(response => response.json())
+        .then(d => {
+        // Process the data received from the API
+        const data = d.data;
+        // Get all account types and their groups
+        const accountTypes = data.accountTypes;
 
 
-            const datasets = [{
-                    label: "Net Worth",
-                    borderColor: accountTypeToColor("Net Worth", "255"),
-                    backgroundColor: accountTypeToColor("Net Worth", "0.2"),
-                    data: [],
-                    fill: true,
-                    borderWidth: 2,
-                    pointRadius: 0,
-                    hidden: false
-                }];
-            const netWorth = {}
-            for (let i = 0; i < data.accountTypes.length; i++) {
-                // User selects an account type
-                const selectedAccountType = data.accountTypes[i].name;
-                const selectedAccountDisplay = data.accountTypes[i].display;
-                if (selectedAccountDisplay === "Other") {
-                    continue;
-                }
-
-                // Filter snapshots by selected account type
-                const filteredSnapshots = data.snapshotsByAccountType.filter(snapshot => snapshot.accountType === selectedAccountType);
-                // Extract relevant data from filtered snapshots
-                // const balances = filteredSnapshots.map(snapshot => snapshot.balance);
-                const balances = filteredSnapshots.map(snapshot => {
-                    const date = snapshot.month;
-                    if (netWorth[date] !== undefined) {
-                        netWorth[date].y += snapshot.balance;
-                    } else {
-                        netWorth[date] = {x: date, y: snapshot.balance};
-                    }
-                    return {x: date, y: snapshot.balance};
-                });
-
-                const set = {
-                    label: selectedAccountDisplay,
-                    data: balances,
-                    borderColor: accountTypeToColor(selectedAccountDisplay, "255"),
-                    backgroundColor: accountTypeToColor(selectedAccountDisplay, "0.2"),
-                    fill: true,
-                    borderWidth: 2,
-                    pointRadius: 0,
-                    hidden: !["brokerage", "depository"].includes(selectedAccountType)
-                }
-                datasets.push(set);
-            }
-            for (var key in netWorth) {
-                datasets[0].data.push(netWorth[key]);
+        const datasets = [{
+            label: "Net Worth",
+            borderColor: accountTypeToColor("Net Worth", "255"),
+            backgroundColor: accountTypeToColor("Net Worth", "0.2"),
+            data: [],
+            fill: true,
+            borderWidth: 2,
+            pointRadius: 0,
+            hidden: false
+        }];
+        const netWorth = {}
+        for (let i = 0; i < data.accountTypes.length; i++) {
+            // User selects an account type
+            const selectedAccountType = data.accountTypes[i].name;
+            const selectedAccountDisplay = data.accountTypes[i].display;
+            if (selectedAccountDisplay === "Other") {
+                continue;
             }
 
-            datasets[0].data.sort((a, b) => {
-              // Directly compare string values for efficient sorting:
-              return a.x.localeCompare(b.x);
+            // Filter snapshots by selected account type
+            const filteredSnapshots = data.snapshotsByAccountType.filter(snapshot => snapshot.accountType === selectedAccountType);
+            // Extract relevant data from filtered snapshots
+            // const balances = filteredSnapshots.map(snapshot => snapshot.balance);
+            const balances = filteredSnapshots.map(snapshot => {
+                const date = snapshot.month;
+                if (netWorth[date] !== undefined) {
+                    netWorth[date].y += snapshot.balance;
+                } else {
+                    netWorth[date] = {x: date, y: snapshot.balance};
+                }
+                return {x: date, y: snapshot.balance};
             });
 
-            // Create a new Chart.js instance
-            const ctx = chart.getContext('2d');
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    datasets,
-                },
-                options: chartStyleOption('ACCOUNT TRENDS: WITHOUT FILTERS')
-            });
-        })
-            .catch((error) => {
-            console.error(error);
+            const set = {
+                label: selectedAccountDisplay,
+                data: balances,
+                borderColor: accountTypeToColor(selectedAccountDisplay, "255"),
+                backgroundColor: accountTypeToColor(selectedAccountDisplay, "0.2"),
+                fill: true,
+                borderWidth: 2,
+                pointRadius: 0,
+                hidden: !["brokerage", "depository"].includes(selectedAccountType)
+            }
+            datasets.push(set);
+        }
+        for (var key in netWorth) {
+            datasets[0].data.push(netWorth[key]);
+        }
+
+        datasets[0].data.sort((a, b) => {
+            // Directly compare string values for efficient sorting:
+            return a.x.localeCompare(b.x);
         });
+
+        // Create a new Chart.js instance
+        const ctx = chart.getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                datasets,
+            },
+            options: chartStyleOption('ACCOUNT TRENDS: WITHOUT FILTERS')
+        });
+    })
+        .catch((error) => {
+        console.error(error);
+    });
 }
 
 
@@ -317,11 +333,11 @@ function drawNetworthChart(chart) {
             .then(d => {
             // Process the data received from the API
             let data = null;
-             if (persist_filters.accounts !== undefined) {
-                 data = d.data.accounts.filter(object => persist_filters.accounts.includes(object.id));
-             } else {
-                 data = d.data.accounts
-             }
+            if (persist_filters.accounts !== undefined) {
+                data = d.data.accounts.filter(object => persist_filters.accounts.includes(object.id));
+            } else {
+                data = d.data.accounts
+            }
 
             const accountTypes = []
             for (let i = 0; i < data.length; i++) {
@@ -330,7 +346,7 @@ function drawNetworthChart(chart) {
                     data[i].displayName = displayName;
                     data[i].type = type;
                     if (!accountTypes.includes(type)) {
-                       accountTypes.push(type);
+                        accountTypes.push(type);
                     }
                 }
             }
@@ -342,7 +358,7 @@ function drawNetworthChart(chart) {
             }
 
             for (let i = 0; i < datasets.length; i++) {
-               datasets[i].data = datasets[i].data.filter(dataset => dataset.y !== 0 && dataset.y !== null);
+                datasets[i].data = datasets[i].data.filter(dataset => dataset.y !== 0 && dataset.y !== null);
             }
             // Create a new Chart.js instance
             const ctx = chart.getContext('2d');
@@ -376,9 +392,9 @@ function createChartDiv(claseName){
     canvas.height = "400px";
     canvas.style.padding = "0px 10px 0px 0px";
     if (getStyle() === 'dark') {
-      canvas.style.backgroundColor = "rgb(13, 44, 92)";
+        canvas.style.backgroundColor = "rgb(13, 44, 92)";
     } else {
-      canvas.style.backgroundColor = "rgb(255, 255, 255)";
+        canvas.style.backgroundColor = "rgb(255, 255, 255)";
     }
     canvas.style.width = canvas.width;
     canvas.style.height = canvas.height;
