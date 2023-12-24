@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Monarch Money (Charts)
 // @namespace    http://tampermonkey.net/
-// @version      0.6
+// @version      0.7
 // @description  Monarch Money (Charts)
 // @author       William T. Wissemann
 // @match        https://app.monarchmoney.com/*
@@ -181,8 +181,13 @@ function chartStyleOption(title) {
         maintainAspectRatio: false,
         responsive: true,
         resizeDelay: 1000,
+
         legend: {
             labels: labels,
+        },
+        interaction: {
+          mode: 'x',
+          intersect: false
         },
         plugins: {
             title: {
