@@ -198,6 +198,9 @@ function chartStyleOption(title) {
                         enabled: true,
                         modifierKey: 'shift'
                     },
+                    drag: {
+                        enabled: true,
+                    },
                     pinch: {
                         enabled: true,
                     },
