@@ -192,6 +192,8 @@ function chartStyleOption(title) {
         },
         plugins: {
             tooltip: {
+                position: "nearest",
+                backgroundColor: "rgba(0, 0, 0, .65)",
                 callbacks: {
                     label: function(context) {
                         let label = context.dataset.label || '';
