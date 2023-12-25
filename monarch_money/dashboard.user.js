@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Monarch Money (Charts)
 // @namespace    http://tampermonkey.net/
-// @version      0.7
+// @version      0.8
 // @description  Monarch Money (Charts)
 // @author       William T. Wissemann
 // @match        https://app.monarchmoney.com/*
@@ -186,10 +186,30 @@ function chartStyleOption(title) {
             labels: labels,
         },
         interaction: {
-          mode: 'x',
+          axis: "x",
+          mode: 'nearest',
           intersect: false
         },
         plugins: {
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        let label = context.dataset.label || '';
+
+                        if (label) {
+                            label += ': ';
+                        }
+                        if (context.parsed.y !== null) {
+                            label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed.y);
+                        }
+                        return label;
+                    },
+                    title: function(context){
+                        let label = context[0].label || '';
+                        return label.match(/^\w+ \d+, \d+/)[0];
+                    }
+                }
+            },
             title: {
                 display: true,
                 text: title,
@@ -440,5 +460,5 @@ function createChartDiv(claseName){
                 localStorage["tm:DarkLightMode"] = getStyle();
             }, 1000);
         }
-    }, 3000);
+    }, 5000);
 })();
