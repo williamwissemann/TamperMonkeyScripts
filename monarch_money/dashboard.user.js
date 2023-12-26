@@ -32,6 +32,7 @@ function accountTypeToColor(accountType, alpha){
     return lookup[accountType];
 }
 
+
 function getPersistReports() {
     return JSON.parse(JSON.parse(localStorage.getItem("persist:reports")).filters);
 }
@@ -125,7 +126,7 @@ async function getAccountPageRecentBalance() {
         return data;
     } else {
         let {cacheDate, data} = JSON.parse(localStorage["tm:AccountPageRecentBalance"]);
-        if (cacheDate !== new Date().toISOString().slice(0, 10)) {
+        if (cacheDate !== new Date().toISOString().slice(0, 10) || data.data === undefined) {
             const data = await getAccountPageRecentBalanceByDate(START_DATE)
             localStorage["tm:AccountPageRecentBalance"] = JSON.stringify({"cacheDate": new Date().toISOString().slice(0, 10), "data": data});
             return data;
@@ -367,7 +368,7 @@ function drawNetworthChart(chart) {
             if (persist_filters.accounts !== undefined) {
                 data = d.data.accounts.filter(object => persist_filters.accounts.includes(object.id));
             } else {
-                data = d.data.accounts
+                data = d.data.accounts;
             }
 
             const accountTypes = []
