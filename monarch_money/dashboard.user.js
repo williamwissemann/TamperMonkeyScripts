@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Monarch Money (Charts)
 // @namespace    http://tampermonkey.net/
-// @version      0.8
+// @version      0.9
 // @description  Monarch Money (Charts)
 // @author       William T. Wissemann
 // @match        https://app.monarchmoney.com/*
@@ -155,9 +155,11 @@ function recentBalancesMerge(data, label) {
     for (let i = 1; i < data.length; i++) {
         for (let j = 0; j < data[i].recentBalances.length; j++) {
             const val = data[i].recentBalances[j];
-            if (val != null) {
+             if (dataset.data[j].y === undefined || dataset.data[j].y === null) {
+                dataset.data[j].y = val;
+             } else if (val != null) {
                 dataset.data[j].y += val;
-            }
+             }
         }
     }
     return dataset
