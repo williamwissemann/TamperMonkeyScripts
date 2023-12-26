@@ -32,7 +32,6 @@ function accountTypeToColor(accountType, alpha){
     return lookup[accountType];
 }
 
-
 function getPersistReports() {
     return JSON.parse(JSON.parse(localStorage.getItem("persist:reports")).filters);
 }
@@ -155,11 +154,11 @@ function recentBalancesMerge(data, label) {
     for (let i = 1; i < data.length; i++) {
         for (let j = 0; j < data[i].recentBalances.length; j++) {
             const val = data[i].recentBalances[j];
-             if (dataset.data[j].y === undefined || dataset.data[j].y === null) {
+            if (dataset.data[j].y === undefined) {
                 dataset.data[j].y = val;
-             } else if (val != null) {
+            } else if (val !== null) {
                 dataset.data[j].y += val;
-             }
+            }
         }
     }
     return dataset
@@ -188,9 +187,9 @@ function chartStyleOption(title) {
             labels: labels,
         },
         interaction: {
-          axis: "x",
-          mode: 'nearest',
-          intersect: false
+            axis: "x",
+            mode: 'nearest',
+            intersect: false
         },
         plugins: {
             tooltip: {
