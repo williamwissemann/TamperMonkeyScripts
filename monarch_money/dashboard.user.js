@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Monarch Money (Charts)
 // @namespace    http://tampermonkey.net/
-// @version      0.10
+// @version      0.11
 // @description  Monarch Money (Charts)
 // @author       William T. Wissemann
 // @match        https://app.monarchmoney.com/*
@@ -56,19 +56,9 @@ function createGraphOption(data) {
         method: 'POST',
         headers: {
             accept: '*/*',
-            // 'accept-language': 'en-US,en;q=0.9',
             authorization: `Token ${getGraphqlToken()}`,
-            // 'client-platform': 'web',
             'content-type': 'application/json',
             origin: 'https://app.monarchmoney.com',
-            // 'sec-ch-ua': '"TM Userscript"',
-            // 'sec-ch-ua-mobile': '?0',
-            // 'sec-ch-ua-platform': '"macOS"',
-            // 'sec-fetch-dest': 'empty',
-            // 'sec-fetch-mode': 'no-cors',
-            // 'sec-fetch-site': 'same-site',
-            // 'sec-gpc': '1',
-            // 'user-agent': navigator.userAgent,
         },
         body: JSON.stringify(data),
     };
@@ -90,6 +80,7 @@ async function getAccountDetails() {
                 accountLookupById[accountDetails[i].accounts[j].id] = {
                     type: display,
                     displayName: accountDetails[i].accounts[j].displayName,
+                    accountData: accountDetails[i].accounts[j],
                 }
             }
         }
@@ -375,14 +366,18 @@ function drawNetworthChart(chart) {
             const accountTypes = []
             for (let i = 0; i < data.length; i++) {
                 if (accountDetails.accountLookupById[data[i].id] !== undefined) {
-                    let {displayName, type} = accountDetails.accountLookupById[data[i].id]
+                    let {displayName, type, accountData} = accountDetails.accountLookupById[data[i].id]
                     data[i].displayName = displayName;
                     data[i].type = type;
+                    data[i].includeInNetWorth = accountData.includeInNetWorth
+
                     if (!accountTypes.includes(type)) {
                         accountTypes.push(type);
                     }
                 }
             }
+
+            data = data.filter(object => object.includeInNetWorth === true);
 
             const datasets = []
             datasets.push(recentBalancesMerge(data, "Net Worth"));
