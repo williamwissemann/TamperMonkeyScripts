@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Monarch Money (Charts)
 // @namespace    http://tampermonkey.net/
-// @version      0.9
+// @version      0.10
 // @description  Monarch Money (Charts)
 // @author       William T. Wissemann
 // @match        https://app.monarchmoney.com/*
@@ -52,22 +52,23 @@ function getGraphqlToken() {
 }
 function createGraphOption(data) {
     return {
+        mode: 'cors',
         method: 'POST',
         headers: {
             accept: '*/*',
-            'accept-language': 'en-US,en;q=0.9',
+            // 'accept-language': 'en-US,en;q=0.9',
             authorization: `Token ${getGraphqlToken()}`,
-            'client-platform': 'web',
+            // 'client-platform': 'web',
             'content-type': 'application/json',
             origin: 'https://app.monarchmoney.com',
-            'sec-ch-ua': '"TM Userscript"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"macOS"',
-            'sec-fetch-dest': 'empty',
-            'sec-fetch-mode': 'cors',
-            'sec-fetch-site': 'same-site',
-            'sec-gpc': '1',
-            'user-agent': navigator.userAgent,
+            // 'sec-ch-ua': '"TM Userscript"',
+            // 'sec-ch-ua-mobile': '?0',
+            // 'sec-ch-ua-platform': '"macOS"',
+            // 'sec-fetch-dest': 'empty',
+            // 'sec-fetch-mode': 'no-cors',
+            // 'sec-fetch-site': 'same-site',
+            // 'sec-gpc': '1',
+            // 'user-agent': navigator.userAgent,
         },
         body: JSON.stringify(data),
     };
@@ -126,7 +127,7 @@ async function getAccountPageRecentBalance() {
         return data;
     } else {
         let {cacheDate, data} = JSON.parse(localStorage["tm:AccountPageRecentBalance"]);
-        if (cacheDate !== new Date().toISOString().slice(0, 10) || data.data === undefined) {
+        if (cacheDate !== new Date().toISOString().slice(0, 10) || data === undefined || data.data === undefined) {
             const data = await getAccountPageRecentBalanceByDate(START_DATE)
             localStorage["tm:AccountPageRecentBalance"] = JSON.stringify({"cacheDate": new Date().toISOString().slice(0, 10), "data": data});
             return data;
