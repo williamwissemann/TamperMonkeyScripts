@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Monarch Money (Charts)
 // @namespace    http://tampermonkey.net/
-// @version      0.11
+// @version      0.12
 // @description  Monarch Money (Charts)
 // @author       William T. Wissemann
 // @match        https://app.monarchmoney.com/*
@@ -11,6 +11,7 @@
 // @require      https://cdn.jsdelivr.net/npm/chart.js
 // @require      https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js
 // @require      https://cdn.jsdelivr.net/npm/hammerjs@2.0.8
+// @require      https://cdn.jsdelivr.net/npm/chartjs-plugin-crosshair@2.0.0/dist/chartjs-plugin-crosshair.min.js
 // @require      https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js
 // ==/UserScript==
 
@@ -185,6 +186,12 @@ function chartStyleOption(title) {
             intersect: false
         },
         plugins: {
+            crosshair: {
+                line: {
+                  color: 'rgba(55, 162, 235, .5)', // crosshair line color
+                  width: 1 // crosshair line width
+                }
+            },
             tooltip: {
                 position: "nearest",
                 backgroundColor: "rgba(0, 0, 0, .65)",
@@ -323,7 +330,9 @@ function drawSnapshotsByAccountType(chart) {
                 pointRadius: 0,
                 hidden: !["brokerage", "depository"].includes(selectedAccountType)
             }
-            datasets.push(set);
+            if (set.data.length > 0) {
+                datasets.push(set);
+            }
         }
         for (var key in netWorth) {
             datasets[0].data.push(netWorth[key]);
