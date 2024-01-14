@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Monarch Money (Charts)
 // @namespace    http://tampermonkey.net/
-// @version      0.13
+// @version      0.14
 // @description  Monarch Money (Charts)
 // @author       William T. Wissemann
 // @match        https://app.monarchmoney.com/*
@@ -108,21 +108,35 @@ async function getAccountPageRecentBalanceByDate(date) {
       console.error(error);
     });
 }
+
 async function getAccountPageRecentBalance() {
-  if (localStorage['tm:AccountPageRecentBalance'] === undefined) {
-    const data = await getAccountPageRecentBalanceByDate(START_DATE);
-    localStorage['tm:AccountPageRecentBalance'] = JSON.stringify({ cacheDate: new Date().toISOString().slice(0, 10), data });
-    return data;
+  const today = new Date().toISOString().slice(0, 10);
+
+  try {
+    const cachedData = JSON.parse(localStorage?.getItem('tm:AccountPageRecentBalance') ?? '{}');
+
+    if (
+      !cachedData.cacheDate ||
+      cachedData.cacheDate !== today ||
+      !cachedData.data ||
+      !cachedData.data.data ||
+      !cachedData.data.data.accounts ||
+      !Array.isArray(cachedData.data.data.accounts[0]?.recentBalances) ||
+      cachedData.data.data.accounts[0].recentBalances.length !==
+        (new Date(today).getTime() - new Date(START_DATE).getTime()) / (1000 * 3600 * 24) + 1
+    ) {
+      const freshData = await getAccountPageRecentBalanceByDate(START_DATE);
+      localStorage.setItem('tm:AccountPageRecentBalance', JSON.stringify({ cacheDate: today, data: freshData }));
+      return freshData;
+    }
+
+    return cachedData.data;
+  } catch (error) {
+    console.error('Error handling cached data:', error);
+    const freshData = await getAccountPageRecentBalanceByDate(START_DATE);
+    localStorage.setItem('tm:AccountPageRecentBalance', JSON.stringify({ cacheDate: today, data: freshData }));
+    return freshData;
   }
-  const { cacheDate, data } = JSON.parse(localStorage['tm:AccountPageRecentBalance']);
-  if (cacheDate !== new Date().toISOString().slice(0, 10)
-        || data === undefined
-        || data.data === undefined) {
-    const fetchData = await getAccountPageRecentBalanceByDate(START_DATE);
-    localStorage['tm:AccountPageRecentBalance'] = JSON.stringify({ cacheDate: new Date().toISOString().slice(0, 10), data });
-    return fetchData;
-  }
-  return data;
 }
 
 function recentBalancesMerge(data, label) {
