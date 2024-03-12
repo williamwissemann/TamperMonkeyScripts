@@ -2,7 +2,7 @@
 // @name         Monarch Money (Charts)
 // @namespace    http://tampermonkey.net/
 // @version      0.15
-// @description  Monarch Money (Charts)
+// @description  Additional trend charts added to Monarch Money's dashboard page.
 // @author       William T. Wissemann
 // @match        https://app.monarchmoney.com/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=monarchmoney.com
