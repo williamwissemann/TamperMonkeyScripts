@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Monarch Money (Charts)
 // @namespace    http://tampermonkey.net/
-// @version      0.15
+// @version      0.16
 // @description  Additional trend charts added to Monarch Money's dashboard page.
 // @author       William T. Wissemann
 // @match        https://app.monarchmoney.com/*
@@ -251,10 +251,32 @@ function chartStyleOption(title) {
       x: {
         type: 'time',
         time: {
-          unit: 'year',
+          unit: 'month',
         },
         border: {
           dash: [5, 8],
+        },
+    ticks: {
+        major: {
+           enabled: true,
+        },
+        callback: function(value, index, values) {
+            const stick = new Date(values[0].value);
+
+            const d = new Date(value);
+            const year = d.getFullYear();
+            const month = d.getMonth();
+            const mShort = d.toLocaleString('en-US', { month: 'short' });
+
+            if(values[index] !== undefined){
+              if (month == 0){
+                 values[index].major = true;
+                 return `${year} ${mShort}`;
+              } else {
+                 return `${mShort}`;
+              }
+            }
+          }
         },
       },
       y: {
