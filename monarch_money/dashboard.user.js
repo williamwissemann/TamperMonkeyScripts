@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Monarch Money (Charts)
 // @namespace    http://tampermonkey.net/
-// @version      0.16
+// @version      0.17.0
 // @description  Additional trend charts added to Monarch Money's dashboard page.
 // @author       William T. Wissemann
 // @match        https://app.monarchmoney.com/*
@@ -62,6 +62,50 @@ function createGraphOption(data) {
     body: JSON.stringify(data),
   };
 }
+
+async function getAccountHistory(id) {
+  const options = createGraphOption({
+    operationName: 'AccountDetails_getAccount',
+    variables: {
+      id,
+    },
+    query: "query AccountDetails_getAccount($id: UUID!, $filters: TransactionFilterInput) {\n  account(id: $id) {\n    id\n    ...AccountFields\n    ...EditAccountFormFields\n    credential {\n      id\n      institution {\n        id\n        ...InstitutionStatusFields\n        __typename\n      }\n      __typename\n    }\n    institution {\n      id\n      ...InstitutionStatusFields\n      __typename\n    }\n    __typename\n  }\n  transactions: allTransactions(filters: $filters) {\n    totalCount\n    results(limit: 1) {\n      id\n      ...TransactionsListFields\n      __typename\n    }\n    __typename\n  }\n  snapshots: snapshotsForAccount(accountId: $id) {\n    date\n    signedBalance\n    __typename\n  }\n}\n\nfragment AccountFields on Account {\n  id\n  displayName\n  syncDisabled\n  deactivatedAt\n  isHidden\n  isAsset\n  mask\n  createdAt\n  updatedAt\n  displayLastUpdatedAt\n  currentBalance\n  displayBalance\n  includeInNetWorth\n  hideFromList\n  hideTransactionsFromReports\n  includeBalanceInNetWorth\n  includeInGoalBalance\n  dataProvider\n  dataProviderAccountId\n  isManual\n  transactionsCount\n  holdingsCount\n  manualInvestmentsTrackingMethod\n  order\n  icon\n  logoUrl\n  type {\n    name\n    display\n    group\n    __typename\n  }\n  subtype {\n    name\n    display\n    __typename\n  }\n  credential {\n    id\n    updateRequired\n    disconnectedFromDataProviderAt\n    dataProvider\n    institution {\n      id\n      plaidInstitutionId\n      name\n      status\n      logo\n      __typename\n    }\n    __typename\n  }\n  institution {\n    id\n    name\n    logo\n    primaryColor\n    url\n    __typename\n  }\n  __typename\n}\n\nfragment EditAccountFormFields on Account {\n  id\n  displayName\n  deactivatedAt\n  displayBalance\n  includeInNetWorth\n  hideFromList\n  hideTransactionsFromReports\n  dataProvider\n  dataProviderAccountId\n  isManual\n  manualInvestmentsTrackingMethod\n  isAsset\n  invertSyncedBalance\n  canInvertBalance\n  useAvailableBalance\n  canUseAvailableBalance\n  type {\n    name\n    display\n    __typename\n  }\n  subtype {\n    name\n    display\n    __typename\n  }\n  __typename\n}\n\nfragment InstitutionStatusFields on Institution {\n  id\n  hasIssuesReported\n  hasIssuesReportedMessage\n  plaidStatus\n  status\n  balanceStatus\n  transactionsStatus\n  __typename\n}\n\nfragment TransactionsListFields on Transaction {\n  id\n  ...TransactionOverviewFields\n  __typename\n}\n\nfragment TransactionOverviewFields on Transaction {\n  id\n  amount\n  pending\n  date\n  hideFromReports\n  plaidName\n  notes\n  isRecurring\n  reviewStatus\n  needsReview\n  isSplitTransaction\n  dataProviderDescription\n  attachments {\n    id\n    __typename\n  }\n  category {\n    id\n    name\n    icon\n    group {\n      id\n      type\n      __typename\n    }\n    __typename\n  }\n  merchant {\n    name\n    id\n    transactionsCount\n    __typename\n  }\n  tags {\n    id\n    name\n    color\n    order\n    __typename\n  }\n  account {\n    id\n    displayName\n    icon\n    logoUrl\n    __typename\n  }\n  __typename\n}",
+  });
+
+
+  return fetch(graphql, options)
+    .then((response) => response.json())
+    .then((data) => {
+      const today = new Date().toISOString().slice(0, 10);
+      const differenceInDays = (new Date(today).getTime() - new Date(START_DATE).getTime()) / (1000 * 3600 * 24) + 1;
+
+      // Create the array filled with nulls
+      const recentBalances = new Array(differenceInDays).fill(null);
+      for (let i = 0; i < data.data.snapshots.length; i += 1) {
+          let index = getDateIndex(data.data.snapshots[i].date);
+          if (index > -1) {
+              recentBalances[index] = data.data.snapshots[i].signedBalance;
+          }
+      }
+      return recentBalances;
+    }).catch((error) => {
+      console.error(error);
+    });
+}
+
+function getDateIndex(dateString) {
+  // Calculate the difference in days from the start date
+  const differenceInDays = (new Date(dateString).getTime() - new Date(START_DATE).getTime()) / (1000 * 3600 * 24) + 1;
+
+  // Check for invalid dates (before start date)
+  if (differenceInDays <= 0) {
+    return -1; // Return -1 for dates before the start date
+  }
+
+  // Return the index within the array (0-based)
+  return differenceInDays - 1;
+}
+
 async function getAccountDetails() {
   const options = createGraphOption({
     operationName: 'Web_GetAccountsPage',
@@ -90,7 +134,7 @@ async function getAccountDetails() {
     });
 }
 async function getAccountPageRecentBalanceByDate(date) {
-  return fetch(graphql, createGraphOption({
+  const data = await fetch(graphql, createGraphOption({
     operationName: 'Web_GetAccountsPageRecentBalance',
     variables: {
       startDate: date,
@@ -102,11 +146,18 @@ async function getAccountPageRecentBalanceByDate(date) {
                 __typename
             }
         }`,
-  }))
+    }))
     .then((response) => response.json())
     .then((data) => data).catch((error) => {
       console.error(error);
     });
+
+   for (let i = 0; i < data.data.accounts.length; i += 1) {
+     const recentBalances = await getAccountHistory(data.data.accounts[i].id).then((data) => data)
+     data.data.accounts[i].recentBalances = recentBalances;
+   }
+
+   return data;
 }
 
 async function getAccountPageRecentBalance() {
@@ -261,11 +312,10 @@ function chartStyleOption(title) {
            enabled: true,
         },
         callback: function(value, index, values) {
-            const stick = new Date(values[0].value);
-
             const d = new Date(value);
             const year = d.getFullYear();
             const month = d.getMonth();
+            const day = d.getDay();
             const mShort = d.toLocaleString('en-US', { month: 'short' });
 
             if(values[index] !== undefined){
