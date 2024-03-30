@@ -14,6 +14,7 @@
     setInterval(() => {
         // removes the trend line from the graph
         const selectors = ["[class*=AccountNetWorthChart__Root] [class~=recharts-line-curve]",
+                           "[class*=AccountNetWorthCharts__Root] [class~=recharts-line] [stroke-width]",
                            "[class*=CashFlowBarChart__Root] [class~=recharts-line-curve]"];
         for (const selector of selectors) {
             const lineElements = document.querySelectorAll(selector);
