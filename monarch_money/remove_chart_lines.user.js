@@ -22,5 +22,14 @@
                 lineElement.style.strokeWidth = "0";
             }
         }
+
+        // flatten gradient fill
+        const fill = ["[class*=AccountNetWorthCharts__Root] [fill*='url(#area0)']"];
+        for (const selector of fill) {
+            const lineElements = document.querySelectorAll(selector);
+            for (const lineElement of lineElements) {
+                lineElement.style.fill = "rgba(255, 255, 255, .5)";
+            }
+        }
     }, 3000);
 })();
