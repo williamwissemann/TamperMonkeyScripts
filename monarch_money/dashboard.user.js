@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Monarch Money (Charts)
 // @namespace    http://tampermonkey.net/
-// @version      0.17.0
+// @version      0.18.0
 // @description  Additional trend charts added to Monarch Money's dashboard page.
 // @author       William T. Wissemann
 // @match        https://app.monarchmoney.com/*
@@ -330,6 +330,7 @@ function chartStyleOption(title) {
         },
       },
       y: {
+        type: localStorage['tm:YChartType'] || "linear",
         ticks: {
           beginAtZero: true,
         },
@@ -523,15 +524,31 @@ function createChartDiv(claseName) {
   return [canvas, chartDiv];
 }
 
+function unloadCharts() {
+    const tmCharts = document.querySelectorAll('[class*=TM_CHARTS]');
+    if(tmCharts.length > 0) {
+      for (let i = 0; i < tmCharts.length; i += 1) {
+        tmCharts[i].remove();
+      }
+    }
+}
+
+document.addEventListener('keydown', (event) => {
+   console.log(event);
+   if (event.ctrlKey === true && event.key === 'l') {
+       // ctrl + l: toogle between log and liner
+       localStorage['tm:YChartType'] = localStorage['tm:YChartType'] === "logarithmic" ? "linear" : "logarithmic";
+       console.log(localStorage['tm:YChartType']);
+       unloadCharts();
+   }
+});
+
 (function () {
   setInterval(() => {
     if (window.location.pathname === '/dashboard' && (document.querySelectorAll('[class*=TM_CHARTS]').length === 0 || localStorage['tm:DarkLightMode'] !== getStyle())) {
       const injectionInterval = setInterval(() => {
-        const tmCharts = document.querySelectorAll('[class*=TM_CHARTS]');
-        if (tmCharts.length > 0 && localStorage['tm:DarkLightMode'] !== getStyle()) {
-          for (let i = 0; i < tmCharts.length; i += 1) {
-            tmCharts[i].remove();
-          }
+        if (localStorage['tm:DarkLightMode'] !== getStyle()) {
+            unloadCharts();
         }
         // only run the injectionInterval once
         clearInterval(injectionInterval);
