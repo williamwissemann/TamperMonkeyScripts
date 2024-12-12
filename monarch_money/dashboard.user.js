@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Monarch Money (Charts)
 // @namespace    http://tampermonkey.net/
-// @version      0.18.0
+// @version      0.19.0
 // @description  Additional trend charts added to Monarch Money's dashboard page.
 // @author       William T. Wissemann
 // @match        https://app.monarchmoney.com/*
@@ -40,7 +40,7 @@ function getPersistReports() {
 function getStyle() {
   const cssObj = window.getComputedStyle(document.querySelectorAll('[class*=Page__Root]')[0], null);
   const bgColor = cssObj.getPropertyValue('background-color');
-  if (bgColor === 'rgb(8, 32, 67)') {
+  if (bgColor === 'rgb(25, 25, 24)') {
     return 'dark';
   }
   return 'light';
@@ -503,7 +503,7 @@ function createChartDiv(claseName) {
   chartDiv.margin = 'auto';
   chartDiv.style.width = chartDiv.width;
   chartDiv.style.height = chartDiv.height;
-  chartDiv.style.padding = '22px 22px 0px 20px';
+  chartDiv.style.padding = '12px 22px 10px 22px';
   chartDiv.boxShadow = 'rgba(0, 0, 0, 0.2) 0px 4px 8px';
 
   const canvas = document.createElement('canvas');
@@ -512,7 +512,7 @@ function createChartDiv(claseName) {
   canvas.height = '400px';
   canvas.style.padding = '0px 10px 0px 0px';
   if (getStyle() === 'dark') {
-    canvas.style.backgroundColor = 'rgb(13, 44, 92)';
+    canvas.style.backgroundColor = 'rgb(34, 34, 35)';
   } else {
     canvas.style.backgroundColor = 'rgb(255, 255, 255)';
   }
