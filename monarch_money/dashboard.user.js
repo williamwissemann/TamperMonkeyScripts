@@ -681,6 +681,22 @@ document.addEventListener('keydown', (event) => {
 
         localStorage['tm:DarkLightMode'] = getStyle();
       }, 1000);
+    } else if (window.location.pathname === '/accounts' && (document.querySelectorAll('[class*=TM_CHARTS]').length === 0 || localStorage['tm:DarkLightMode'] !== getStyle())) {
+      const injectionInterval = setInterval(() => {
+        if (localStorage['tm:DarkLightMode'] !== getStyle()) {
+            unloadCharts();
+        }
+        // only run the injectionInterval once
+        clearInterval(injectionInterval);
+        // inject a div at the top of MM's scroll
+        const scrollRoot = document.querySelectorAll('[class*=Scroll__Root]')[0];
+
+        const [snapshotsByAccountCanvas, snapshotsByAccountDiv] = createChartDiv('TM_snapshotsByAccountType');
+        scrollRoot.insertBefore(snapshotsByAccountDiv, scrollRoot.children[0]);
+        drawSnapshotsByAccountType(snapshotsByAccountCanvas);
+
+        localStorage['tm:DarkLightMode'] = getStyle();
+      }, 1000);
     }
     else if (window.location.pathname === '/cash-flow'
              && (document.querySelectorAll('[class*=TM_CHARTS]').length === 0 || localStorage['tm:DarkLightMode'] !== getStyle()) || (window.location.pathname === '/cash-flow' && localStorage['tm:Timeframe'] !== getSearchParam("timeframe"))) {
