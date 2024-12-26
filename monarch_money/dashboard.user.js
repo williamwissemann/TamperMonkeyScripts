@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Monarch Money (Charts)
 // @namespace    http://tampermonkey.net/
-// @version      0.19.0
+// @version      0.20.0
 // @description  Additional trend charts added to Monarch Money's dashboard page.
 // @author       William T. Wissemann
 // @match        https://app.monarchmoney.com/*
@@ -35,6 +35,11 @@ function accountTypeToColor(accountType, alpha) {
 
 function getPersistReports() {
   return JSON.parse(JSON.parse(localStorage.getItem('persist:reports')).filters);
+}
+
+function getSearchParam(paramName) {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get(paramName);
 }
 
 function getStyle() {
@@ -264,8 +269,11 @@ function chartStyleOption(title) {
             if (label) {
               label += ': ';
             }
-            if (context.parsed.y !== null) {
+            if (context.parsed.y !== null && label !== "Savings Rate: ") {
               label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed.y);
+            }
+            else if (context.parsed.y !== null && label === "Savings Rate: ") {
+              label += context.parsed.y.toFixed(2) + "%"
             }
             return label;
           },
@@ -340,6 +348,114 @@ function chartStyleOption(title) {
       },
     },
   };
+}
+
+function drawCashFlowAggregates(chart, timeframe) {
+  fetch(graphql, createGraphOption({
+    operationName: 'Web_CashFlowAggregates',
+    variables: {
+        filters: {search: "", categories: [], accounts: [], tags: []}
+    },
+    query: "query Web_CashFlowAggregates($filters: TransactionFilterInput) {\n  byYear: aggregates(groupBy: [\"year\"], fillEmptyValues: true, filters: $filters) {\n    groupBy {\n      year\n      __typename\n    }\n    summary {\n      savings\n      savingsRate\n      sumIncome\n      sumExpense\n      __typename\n    }\n    __typename\n  }\n  byMonth: aggregates(\n    groupBy: [\"month\"]\n    fillEmptyValues: true\n    filters: $filters\n  ) {\n    groupBy {\n      month\n      __typename\n    }\n    summary {\n      savings\n      savingsRate\n      sumIncome\n      sumExpense\n      __typename\n    }\n    __typename\n  }\n  byQuarter: aggregates(\n    groupBy: [\"quarter\"]\n    fillEmptyValues: true\n    filters: $filters\n  ) {\n    groupBy {\n      quarter\n      __typename\n    }\n    summary {\n      savings\n      savingsRate\n      sumIncome\n      sumExpense\n      __typename\n    }\n    __typename\n  }\n}",
+  })).then((response) => response.json())
+    .then((d) => {
+      // Process the data received from the API
+      const { data } = d
+      const datasets = []
+
+      let dataBy = data.byMonth
+      if (timeframe === "year") {
+          dataBy = data.byYear
+      } else if (timeframe === "quarter") {
+          dataBy = data.byQuarter
+      }
+
+      const savingsData = []
+      const savingsRateData = []
+      const sumIncomeData = []
+      const sumExpenseData = []
+
+      for (let i = 0; i < dataBy.length; i += 1) {
+        // User selects an account type
+        let date = dataBy[i].groupBy.month
+        if (timeframe === "year") {
+          date = dataBy[i].groupBy.year
+        } else if (timeframe === "quarter") {
+          date = dataBy[i].groupBy.quarter
+        }
+        const {savings, savingsRate, sumIncome, sumExpense} = dataBy[i].summary
+
+        savingsData.push({ x: date, y: savings})
+        savingsRateData.push({ x: date, y: savingsRate*100})
+        sumIncomeData.push({ x: date, y: sumIncome})
+        sumExpenseData.push({ x: date, y: sumExpense})
+      }
+
+      const i = {
+          type: "line",
+          label: "Income",
+          data: sumIncomeData,
+          borderColor: `rgba(48, 164, 108, 255)`,
+          backgroundColor: `rgba(48, 164, 108, 0.2)`,
+          fill: true,
+          borderWidth: 2,
+          pointRadius: 0,
+      };
+      if (i.data.length > 0) {
+          datasets.push(i);
+      }
+
+      const e = {
+          type: "line",
+          label: "Expenses",
+          data: sumExpenseData,
+          borderColor: `rgba(228, 72, 78, 255)`,
+          backgroundColor: `rgba(228, 72, 78, 0.2)`,
+          fill: true,
+          borderWidth: 2,
+          pointRadius: 0,
+      };
+      if (e.data.length > 0) {
+          datasets.push(e);
+      }
+
+      const s = {
+          label: "Savings",
+          data: savingsData,
+          borderColor: `rgba(238, 238, 236, 0.8)`,
+          fill: false,
+          borderWidth: 2,
+          pointRadius: 0,
+      };
+      if (s.data.length > 0) {
+          datasets.push(s);
+      }
+      const sr = {
+          label: "Savings Rate",
+          data: savingsRateData,
+          borderColor: `rgba(238, 238, 236, 0.8)`,
+          fill: false,
+          borderWidth: 2,
+          pointRadius: 0,
+      };
+      if (s.data.length > 0) {
+          datasets.push(sr);
+      }
+
+      // Create a new Chart.js instance
+      const ctx = chart.getContext('2d');
+      // eslint-disable-next-line no-new
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          datasets,
+        },
+        options: chartStyleOption('CASH FLOW'),
+      });
+    })
+    .catch((error) => {
+      console.error(error);
+    });
 }
 
 function drawSnapshotsByAccountType(chart) {
@@ -564,6 +680,25 @@ document.addEventListener('keydown', (event) => {
         drawNetworthChart(networthCanvas);
 
         localStorage['tm:DarkLightMode'] = getStyle();
+      }, 1000);
+    }
+    else if (window.location.pathname === '/cash-flow'
+             && (document.querySelectorAll('[class*=TM_CHARTS]').length === 0 || localStorage['tm:DarkLightMode'] !== getStyle()) || localStorage['tm:Timeframe'] !== getSearchParam("timeframe")) {
+      const injectionInterval = setInterval(() => {
+        if (localStorage['tm:DarkLightMode'] !== getStyle() || localStorage['tm:Timeframe'] !== getSearchParam("timeframe")) {
+            unloadCharts();
+        }
+        // only run the injectionInterval once
+        clearInterval(injectionInterval);
+        // inject a div at the top of MM's scroll
+        const scrollRoot = document.querySelectorAll('[class*=Scroll__Root]')[0];
+
+        const [cashFlowAggregatesCanvas, cashFlowAggregatesDiv] = createChartDiv('TM_cashFlowAggregates');
+        scrollRoot.insertBefore(cashFlowAggregatesDiv, scrollRoot.children[0]);
+        drawCashFlowAggregates(cashFlowAggregatesCanvas, getSearchParam("timeframe"));
+
+        localStorage['tm:DarkLightMode'] = getStyle();
+        localStorage['tm:Timeframe'] = getSearchParam("timeframe");
       }, 1000);
     }
   }, 5000);
