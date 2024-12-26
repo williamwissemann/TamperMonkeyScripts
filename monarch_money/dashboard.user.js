@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Monarch Money (Charts)
 // @namespace    http://tampermonkey.net/
-// @version      0.20.0
+// @version      0.21.0
 // @description  Additional trend charts added to Monarch Money's dashboard page.
 // @author       William T. Wissemann
 // @match        https://app.monarchmoney.com/*
@@ -683,7 +683,7 @@ document.addEventListener('keydown', (event) => {
       }, 1000);
     }
     else if (window.location.pathname === '/cash-flow'
-             && (document.querySelectorAll('[class*=TM_CHARTS]').length === 0 || localStorage['tm:DarkLightMode'] !== getStyle()) || localStorage['tm:Timeframe'] !== getSearchParam("timeframe")) {
+             && (document.querySelectorAll('[class*=TM_CHARTS]').length === 0 || localStorage['tm:DarkLightMode'] !== getStyle()) || (window.location.pathname === '/cash-flow' && localStorage['tm:Timeframe'] !== getSearchParam("timeframe"))) {
       const injectionInterval = setInterval(() => {
         if (localStorage['tm:DarkLightMode'] !== getStyle() || localStorage['tm:Timeframe'] !== getSearchParam("timeframe")) {
             unloadCharts();
