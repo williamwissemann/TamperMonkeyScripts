@@ -350,11 +350,11 @@ function chartStyleOption(title) {
   };
 }
 
-function drawCashFlowAggregates(chart, timeframe) {
+function drawCashFlowAggregates(chart, timeframe, accounts, tags) {
   fetch(graphql, createGraphOption({
     operationName: 'Web_CashFlowAggregates',
     variables: {
-        filters: {search: "", categories: [], accounts: [], tags: []}
+        filters: {search: "", categories: [], accounts: accounts, tags: tags}
     },
     query: "query Web_CashFlowAggregates($filters: TransactionFilterInput) {\n  byYear: aggregates(groupBy: [\"year\"], fillEmptyValues: true, filters: $filters) {\n    groupBy {\n      year\n      __typename\n    }\n    summary {\n      savings\n      savingsRate\n      sumIncome\n      sumExpense\n      __typename\n    }\n    __typename\n  }\n  byMonth: aggregates(\n    groupBy: [\"month\"]\n    fillEmptyValues: true\n    filters: $filters\n  ) {\n    groupBy {\n      month\n      __typename\n    }\n    summary {\n      savings\n      savingsRate\n      sumIncome\n      sumExpense\n      __typename\n    }\n    __typename\n  }\n  byQuarter: aggregates(\n    groupBy: [\"quarter\"]\n    fillEmptyValues: true\n    filters: $filters\n  ) {\n    groupBy {\n      quarter\n      __typename\n    }\n    summary {\n      savings\n      savingsRate\n      sumIncome\n      sumExpense\n      __typename\n    }\n    __typename\n  }\n}",
   })).then((response) => response.json())
@@ -393,6 +393,7 @@ function drawCashFlowAggregates(chart, timeframe) {
 
       const i = {
           type: "line",
+          stack: "combinded",
           label: "Income",
           data: sumIncomeData,
           borderColor: `rgba(48, 164, 108, 255)`,
@@ -408,6 +409,7 @@ function drawCashFlowAggregates(chart, timeframe) {
       const e = {
           type: "line",
           label: "Expenses",
+          stack: "combinded",
           data: sumExpenseData,
           borderColor: `rgba(228, 72, 78, 255)`,
           backgroundColor: `rgba(228, 72, 78, 0.2)`,
@@ -419,10 +421,15 @@ function drawCashFlowAggregates(chart, timeframe) {
           datasets.push(e);
       }
 
+      var lineStyle =`rgba(0, 0, 0, 0.8)`
+      if (getStyle() === 'dark') {
+         lineStyle = `rgba(238, 238, 236, 0.8)`
+      }
+
       const s = {
           label: "Savings",
           data: savingsData,
-          borderColor: `rgba(238, 238, 236, 0.8)`,
+          borderColor: lineStyle,
           fill: false,
           borderWidth: 2,
           pointRadius: 0,
@@ -433,7 +440,7 @@ function drawCashFlowAggregates(chart, timeframe) {
       const sr = {
           label: "Savings Rate",
           data: savingsRateData,
-          borderColor: `rgba(238, 238, 236, 0.8)`,
+          borderColor: lineStyle,
           fill: false,
           borderWidth: 2,
           pointRadius: 0,
@@ -699,9 +706,10 @@ document.addEventListener('keydown', (event) => {
       }, 1000);
     }
     else if (window.location.pathname === '/cash-flow'
-             && (document.querySelectorAll('[class*=TM_CHARTS]').length === 0 || localStorage['tm:DarkLightMode'] !== getStyle()) || (window.location.pathname === '/cash-flow' && localStorage['tm:Timeframe'] !== getSearchParam("timeframe"))) {
+             && (document.querySelectorAll('[class*=TM_CHARTS]').length === 0 || localStorage['tm:DarkLightMode'] !== getStyle())
+             || (window.location.pathname === '/cash-flow' && localStorage['tm:CashFlowSearch'] !== window.location.search)) {
       const injectionInterval = setInterval(() => {
-        if (localStorage['tm:DarkLightMode'] !== getStyle() || localStorage['tm:Timeframe'] !== getSearchParam("timeframe")) {
+        if (localStorage['tm:DarkLightMode'] !== getStyle() || localStorage['tm:CashFlowSearch'] !== window.location.search) {
             unloadCharts();
         }
         // only run the injectionInterval once
@@ -711,10 +719,10 @@ document.addEventListener('keydown', (event) => {
 
         const [cashFlowAggregatesCanvas, cashFlowAggregatesDiv] = createChartDiv('TM_cashFlowAggregates');
         scrollRoot.insertBefore(cashFlowAggregatesDiv, scrollRoot.children[0]);
-        drawCashFlowAggregates(cashFlowAggregatesCanvas, getSearchParam("timeframe"));
+        drawCashFlowAggregates(cashFlowAggregatesCanvas, getSearchParam("timeframe"), getSearchParam("accounts")?.split(","), getSearchParam("tags")?.split(","));
 
         localStorage['tm:DarkLightMode'] = getStyle();
-        localStorage['tm:Timeframe'] = getSearchParam("timeframe");
+        localStorage['tm:CashFlowSearch'] = window.location.search;
       }, 1000);
     }
   }, 5000);
