@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Monarch Money (Charts)
 // @namespace    http://tampermonkey.net/
-// @version      0.23.0
+// @version      0.24.0
 // @description  Additional trend charts added to Monarch Money's dashboard page.
 // @author       William T. Wissemann
 // @match        https://app.monarchmoney.com/*
@@ -17,6 +17,7 @@
 
 const graphql = 'https://api.monarchmoney.com/graphql';
 const START_DATE = '2010-01-01';
+var cashFlowSearch = undefined;
 
 function accountTypeToColor(accountType, alpha) {
   const lookup = {
@@ -719,9 +720,9 @@ document.addEventListener('keydown', (event) => {
     } else if ((window.location.pathname === '/cash-flow' || window.location.pathname?.includes('/categories/'))
              && ((document.querySelectorAll('[class*=TM_CHARTS]').length === 0 || localStorage['tm:DarkLightMode'] !== getStyle())
              || ((window.location.pathname === '/cash-flow' || window.location.pathname?.includes('/categories/'))
-                && localStorage['tm:CashFlowSearch'] !== window.location.search))) {
+                && cashFlowSearch !== window.location.search))) {
       const injectionInterval = setInterval(() => {
-        if (localStorage['tm:DarkLightMode'] !== getStyle() || localStorage['tm:CashFlowSearch'] !== window.location.search) {
+        if (localStorage['tm:DarkLightMode'] !== getStyle() || cashFlowSearch !== window.location.search) {
           unloadCharts();
         }
         // only run the injectionInterval once
@@ -740,7 +741,7 @@ document.addEventListener('keydown', (event) => {
         );
 
         localStorage['tm:DarkLightMode'] = getStyle();
-        localStorage['tm:CashFlowSearch'] = window.location.search;
+        cashFlowSearch = window.location.search;
       }, 1000);
     }
   }, 5000);
