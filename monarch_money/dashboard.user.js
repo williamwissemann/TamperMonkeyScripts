@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Monarch Money (Charts)
 // @namespace    http://tampermonkey.net/
-// @version      0.22.0
+// @version      0.23.0
 // @description  Additional trend charts added to Monarch Money's dashboard page.
 // @author       William T. Wissemann
 // @match        https://app.monarchmoney.com/*
@@ -74,9 +74,8 @@ async function getAccountHistory(id) {
     variables: {
       id,
     },
-    query: "query AccountDetails_getAccount($id: UUID!, $filters: TransactionFilterInput) {\n  account(id: $id) {\n    id\n    ...AccountFields\n    ...EditAccountFormFields\n    credential {\n      id\n      institution {\n        id\n        ...InstitutionStatusFields\n        __typename\n      }\n      __typename\n    }\n    institution {\n      id\n      ...InstitutionStatusFields\n      __typename\n    }\n    __typename\n  }\n  transactions: allTransactions(filters: $filters) {\n    totalCount\n    results(limit: 1) {\n      id\n      ...TransactionsListFields\n      __typename\n    }\n    __typename\n  }\n  snapshots: snapshotsForAccount(accountId: $id) {\n    date\n    signedBalance\n    __typename\n  }\n}\n\nfragment AccountFields on Account {\n  id\n  displayName\n  syncDisabled\n  deactivatedAt\n  isHidden\n  isAsset\n  mask\n  createdAt\n  updatedAt\n  displayLastUpdatedAt\n  currentBalance\n  displayBalance\n  includeInNetWorth\n  hideFromList\n  hideTransactionsFromReports\n  includeBalanceInNetWorth\n  includeInGoalBalance\n  dataProvider\n  dataProviderAccountId\n  isManual\n  transactionsCount\n  holdingsCount\n  manualInvestmentsTrackingMethod\n  order\n  icon\n  logoUrl\n  type {\n    name\n    display\n    group\n    __typename\n  }\n  subtype {\n    name\n    display\n    __typename\n  }\n  credential {\n    id\n    updateRequired\n    disconnectedFromDataProviderAt\n    dataProvider\n    institution {\n      id\n      plaidInstitutionId\n      name\n      status\n      logo\n      __typename\n    }\n    __typename\n  }\n  institution {\n    id\n    name\n    logo\n    primaryColor\n    url\n    __typename\n  }\n  __typename\n}\n\nfragment EditAccountFormFields on Account {\n  id\n  displayName\n  deactivatedAt\n  displayBalance\n  includeInNetWorth\n  hideFromList\n  hideTransactionsFromReports\n  dataProvider\n  dataProviderAccountId\n  isManual\n  manualInvestmentsTrackingMethod\n  isAsset\n  invertSyncedBalance\n  canInvertBalance\n  useAvailableBalance\n  canUseAvailableBalance\n  type {\n    name\n    display\n    __typename\n  }\n  subtype {\n    name\n    display\n    __typename\n  }\n  __typename\n}\n\nfragment InstitutionStatusFields on Institution {\n  id\n  hasIssuesReported\n  hasIssuesReportedMessage\n  plaidStatus\n  status\n  balanceStatus\n  transactionsStatus\n  __typename\n}\n\nfragment TransactionsListFields on Transaction {\n  id\n  ...TransactionOverviewFields\n  __typename\n}\n\nfragment TransactionOverviewFields on Transaction {\n  id\n  amount\n  pending\n  date\n  hideFromReports\n  plaidName\n  notes\n  isRecurring\n  reviewStatus\n  needsReview\n  isSplitTransaction\n  dataProviderDescription\n  attachments {\n    id\n    __typename\n  }\n  category {\n    id\n    name\n    icon\n    group {\n      id\n      type\n      __typename\n    }\n    __typename\n  }\n  merchant {\n    name\n    id\n    transactionsCount\n    __typename\n  }\n  tags {\n    id\n    name\n    color\n    order\n    __typename\n  }\n  account {\n    id\n    displayName\n    icon\n    logoUrl\n    __typename\n  }\n  __typename\n}",
+    query: 'query AccountDetails_getAccount($id: UUID!, $filters: TransactionFilterInput) {\n  account(id: $id) {\n    id\n    ...AccountFields\n    ...EditAccountFormFields\n    credential {\n      id\n      institution {\n        id\n        ...InstitutionStatusFields\n        __typename\n      }\n      __typename\n    }\n    institution {\n      id\n      ...InstitutionStatusFields\n      __typename\n    }\n    __typename\n  }\n  transactions: allTransactions(filters: $filters) {\n    totalCount\n    results(limit: 1) {\n      id\n      ...TransactionsListFields\n      __typename\n    }\n    __typename\n  }\n  snapshots: snapshotsForAccount(accountId: $id) {\n    date\n    signedBalance\n    __typename\n  }\n}\n\nfragment AccountFields on Account {\n  id\n  displayName\n  syncDisabled\n  deactivatedAt\n  isHidden\n  isAsset\n  mask\n  createdAt\n  updatedAt\n  displayLastUpdatedAt\n  currentBalance\n  displayBalance\n  includeInNetWorth\n  hideFromList\n  hideTransactionsFromReports\n  includeBalanceInNetWorth\n  includeInGoalBalance\n  dataProvider\n  dataProviderAccountId\n  isManual\n  transactionsCount\n  holdingsCount\n  manualInvestmentsTrackingMethod\n  order\n  icon\n  logoUrl\n  type {\n    name\n    display\n    group\n    __typename\n  }\n  subtype {\n    name\n    display\n    __typename\n  }\n  credential {\n    id\n    updateRequired\n    disconnectedFromDataProviderAt\n    dataProvider\n    institution {\n      id\n      plaidInstitutionId\n      name\n      status\n      logo\n      __typename\n    }\n    __typename\n  }\n  institution {\n    id\n    name\n    logo\n    primaryColor\n    url\n    __typename\n  }\n  __typename\n}\n\nfragment EditAccountFormFields on Account {\n  id\n  displayName\n  deactivatedAt\n  displayBalance\n  includeInNetWorth\n  hideFromList\n  hideTransactionsFromReports\n  dataProvider\n  dataProviderAccountId\n  isManual\n  manualInvestmentsTrackingMethod\n  isAsset\n  invertSyncedBalance\n  canInvertBalance\n  useAvailableBalance\n  canUseAvailableBalance\n  type {\n    name\n    display\n    __typename\n  }\n  subtype {\n    name\n    display\n    __typename\n  }\n  __typename\n}\n\nfragment InstitutionStatusFields on Institution {\n  id\n  hasIssuesReported\n  hasIssuesReportedMessage\n  plaidStatus\n  status\n  balanceStatus\n  transactionsStatus\n  __typename\n}\n\nfragment TransactionsListFields on Transaction {\n  id\n  ...TransactionOverviewFields\n  __typename\n}\n\nfragment TransactionOverviewFields on Transaction {\n  id\n  amount\n  pending\n  date\n  hideFromReports\n  plaidName\n  notes\n  isRecurring\n  reviewStatus\n  needsReview\n  isSplitTransaction\n  dataProviderDescription\n  attachments {\n    id\n    __typename\n  }\n  category {\n    id\n    name\n    icon\n    group {\n      id\n      type\n      __typename\n    }\n    __typename\n  }\n  merchant {\n    name\n    id\n    transactionsCount\n    __typename\n  }\n  tags {\n    id\n    name\n    color\n    order\n    __typename\n  }\n  account {\n    id\n    displayName\n    icon\n    logoUrl\n    __typename\n  }\n  __typename\n}',
   });
-
 
   return fetch(graphql, options)
     .then((response) => response.json())
@@ -87,10 +86,10 @@ async function getAccountHistory(id) {
       // Create the array filled with nulls
       const recentBalances = new Array(differenceInDays).fill(null);
       for (let i = 0; i < data.data.snapshots.length; i += 1) {
-          let index = getDateIndex(data.data.snapshots[i].date);
-          if (index > -1) {
-              recentBalances[index] = data.data.snapshots[i].signedBalance;
-          }
+        const index = getDateIndex(data.data.snapshots[i].date);
+        if (index > -1) {
+          recentBalances[index] = data.data.snapshots[i].signedBalance;
+        }
       }
       return recentBalances;
     }).catch((error) => {
@@ -151,18 +150,18 @@ async function getAccountPageRecentBalanceByDate(date) {
                 __typename
             }
         }`,
-    }))
+  }))
     .then((response) => response.json())
     .then((data) => data).catch((error) => {
       console.error(error);
     });
 
-   for (let i = 0; i < data.data.accounts.length; i += 1) {
-     const recentBalances = await getAccountHistory(data.data.accounts[i].id).then((data) => data)
-     data.data.accounts[i].recentBalances = recentBalances;
-   }
+  for (let i = 0; i < data.data.accounts.length; i += 1) {
+    const recentBalances = await getAccountHistory(data.data.accounts[i].id).then((data) => data);
+    data.data.accounts[i].recentBalances = recentBalances;
+  }
 
-   return data;
+  return data;
 }
 
 async function getAccountPageRecentBalance() {
@@ -172,14 +171,14 @@ async function getAccountPageRecentBalance() {
     const cachedData = JSON.parse(localStorage?.getItem('tm:AccountPageRecentBalance') ?? '{}');
 
     if (
-      !cachedData.cacheDate ||
-      cachedData.cacheDate !== today ||
-      !cachedData.data ||
-      !cachedData.data.data ||
-      !cachedData.data.data.accounts ||
-      !Array.isArray(cachedData.data.data.accounts[0]?.recentBalances) ||
-      cachedData.data.data.accounts[0].recentBalances.length !==
-        (new Date(today).getTime() - new Date(START_DATE).getTime()) / (1000 * 3600 * 24) + 1
+      !cachedData.cacheDate
+      || cachedData.cacheDate !== today
+      || !cachedData.data
+      || !cachedData.data.data
+      || !cachedData.data.data.accounts
+      || !Array.isArray(cachedData.data.data.accounts[0]?.recentBalances)
+      || cachedData.data.data.accounts[0].recentBalances.length
+        !== (new Date(today).getTime() - new Date(START_DATE).getTime()) / (1000 * 3600 * 24) + 1
     ) {
       const freshData = await getAccountPageRecentBalanceByDate(START_DATE);
       localStorage.setItem('tm:AccountPageRecentBalance', JSON.stringify({ cacheDate: today, data: freshData }));
@@ -269,11 +268,10 @@ function chartStyleOption(title) {
             if (label) {
               label += ': ';
             }
-            if (context.parsed.y !== null && label !== "Savings Rate: ") {
+            if (context.parsed.y !== null && label !== 'Savings Rate: ') {
               label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed.y);
-            }
-            else if (context.parsed.y !== null && label === "Savings Rate: ") {
-              label += context.parsed.y.toFixed(2) + "%"
+            } else if (context.parsed.y !== null && label === 'Savings Rate: ') {
+              label += `${context.parsed.y.toFixed(2)}%`;
             }
             return label;
           },
@@ -315,30 +313,29 @@ function chartStyleOption(title) {
         border: {
           dash: [5, 8],
         },
-    ticks: {
-        major: {
-           enabled: true,
-        },
-        callback: function(value, index, values) {
+        ticks: {
+          major: {
+            enabled: true,
+          },
+          callback(value, index, values) {
             const d = new Date(value);
             const year = d.getFullYear();
             const month = d.getMonth();
             const day = d.getDay();
             const mShort = d.toLocaleString('en-US', { month: 'short' });
 
-            if(values[index] !== undefined){
-              if (month == 0){
-                 values[index].major = true;
-                 return `${year} ${mShort}`;
-              } else {
-                 return `${mShort}`;
+            if (values[index] !== undefined) {
+              if (month == 0) {
+                values[index].major = true;
+                return `${year} ${mShort}`;
               }
+              return `${mShort}`;
             }
-          }
+          },
         },
       },
       y: {
-        type: localStorage['tm:YChartType'] || "linear",
+        type: localStorage['tm:YChartType'] || 'linear',
         ticks: {
           beginAtZero: true,
         },
@@ -350,103 +347,118 @@ function chartStyleOption(title) {
   };
 }
 
-function drawCashFlowAggregates(chart, timeframe, accounts, tags) {
+function drawCashFlowAggregates(chart, timeframe, accounts, tags, category) {
   fetch(graphql, createGraphOption({
     operationName: 'Web_CashFlowAggregates',
     variables: {
-        filters: {search: "", categories: [], accounts: accounts, tags: tags}
+      filters: {
+        search: '', categories: category, accounts, tags,
+      },
     },
-    query: "query Web_CashFlowAggregates($filters: TransactionFilterInput) {\n  byYear: aggregates(groupBy: [\"year\"], fillEmptyValues: true, filters: $filters) {\n    groupBy {\n      year\n      __typename\n    }\n    summary {\n      savings\n      savingsRate\n      sumIncome\n      sumExpense\n      __typename\n    }\n    __typename\n  }\n  byMonth: aggregates(\n    groupBy: [\"month\"]\n    fillEmptyValues: true\n    filters: $filters\n  ) {\n    groupBy {\n      month\n      __typename\n    }\n    summary {\n      savings\n      savingsRate\n      sumIncome\n      sumExpense\n      __typename\n    }\n    __typename\n  }\n  byQuarter: aggregates(\n    groupBy: [\"quarter\"]\n    fillEmptyValues: true\n    filters: $filters\n  ) {\n    groupBy {\n      quarter\n      __typename\n    }\n    summary {\n      savings\n      savingsRate\n      sumIncome\n      sumExpense\n      __typename\n    }\n    __typename\n  }\n}",
+    query: 'query Web_CashFlowAggregates($filters: TransactionFilterInput) {\n  byYear: aggregates(groupBy: ["year"], fillEmptyValues: true, filters: $filters) {\n    groupBy {\n      year\n      __typename\n    }\n    summary {\n      savings\n      savingsRate\n      sumIncome\n      sumExpense\n      __typename\n    }\n    __typename\n  }\n  byMonth: aggregates(\n    groupBy: ["month"]\n    fillEmptyValues: true\n    filters: $filters\n  ) {\n    groupBy {\n      month\n      __typename\n    }\n    summary {\n      savings\n      savingsRate\n      sumIncome\n      sumExpense\n      __typename\n    }\n    __typename\n  }\n  byQuarter: aggregates(\n    groupBy: ["quarter"]\n    fillEmptyValues: true\n    filters: $filters\n  ) {\n    groupBy {\n      quarter\n      __typename\n    }\n    summary {\n      savings\n      savingsRate\n      sumIncome\n      sumExpense\n      __typename\n    }\n    __typename\n  }\n}',
   })).then((response) => response.json())
     .then((d) => {
       // Process the data received from the API
-      const { data } = d
-      const datasets = []
+      const { data } = d;
+      const datasets = [];
 
-      let dataBy = data.byMonth
-      if (timeframe === "year") {
-          dataBy = data.byYear
-      } else if (timeframe === "quarter") {
-          dataBy = data.byQuarter
+      let dataBy = data.byMonth;
+      if (timeframe === 'year') {
+        dataBy = data.byYear;
+      } else if (timeframe === 'quarter') {
+        dataBy = data.byQuarter;
       }
 
-      const savingsData = []
-      const savingsRateData = []
-      const sumIncomeData = []
-      const sumExpenseData = []
+      const savingsData = [];
+      const savingsRateData = [];
+      const sumIncomeData = [];
+      const sumExpenseData = [];
 
       for (let i = 0; i < dataBy.length; i += 1) {
         // User selects an account type
-        let date = dataBy[i].groupBy.month
-        if (timeframe === "year") {
-          date = dataBy[i].groupBy.year
-        } else if (timeframe === "quarter") {
-          date = dataBy[i].groupBy.quarter
+        let date = dataBy[i].groupBy.month;
+        if (timeframe === 'year') {
+          date = dataBy[i].groupBy.year;
+        } else if (timeframe === 'quarter') {
+          date = dataBy[i].groupBy.quarter;
         }
-        const {savings, savingsRate, sumIncome, sumExpense} = dataBy[i].summary
+        const {
+          savings, savingsRate, sumIncome, sumExpense,
+        } = dataBy[i].summary;
 
-        savingsData.push({ x: date, y: savings})
-        savingsRateData.push({ x: date, y: savingsRate*100})
-        sumIncomeData.push({ x: date, y: sumIncome})
-        sumExpenseData.push({ x: date, y: sumExpense})
+        if (category === undefined) {
+          savingsData.push({ x: date, y: savings });
+          savingsRateData.push({ x: date, y: savingsRate * 100 });
+        }
+
+        sumIncomeData.push({ x: date, y: sumIncome });
+        sumExpenseData.push({ x: date, y: sumExpense });
       }
 
       const i = {
-          type: "line",
-          stack: "combinded",
-          label: "Income",
-          data: sumIncomeData,
-          borderColor: `rgba(48, 164, 108, 255)`,
-          backgroundColor: `rgba(48, 164, 108, 0.2)`,
-          fill: true,
-          borderWidth: 2,
-          pointRadius: 0,
+        type: 'line',
+        stack: 'combinded',
+        label: 'Income',
+        data: sumIncomeData,
+        borderColor: 'rgba(48, 164, 108, 255)',
+        backgroundColor: 'rgba(48, 164, 108, 0.2)',
+        fill: true,
+        borderWidth: 2,
+        pointRadius: 0,
       };
       if (i.data.length > 0) {
+        i.data.sort((a, b) => a.x.localeCompare(b.x));
+        if (i.data.some((item) => item.y !== 0)) {
           datasets.push(i);
+        }
       }
 
       const e = {
-          type: "line",
-          label: "Expenses",
-          stack: "combinded",
-          data: sumExpenseData,
-          borderColor: `rgba(228, 72, 78, 255)`,
-          backgroundColor: `rgba(228, 72, 78, 0.2)`,
-          fill: true,
-          borderWidth: 2,
-          pointRadius: 0,
+        type: 'line',
+        label: 'Expenses',
+        stack: 'combinded',
+        data: sumExpenseData,
+        borderColor: 'rgba(228, 72, 78, 255)',
+        backgroundColor: 'rgba(228, 72, 78, 0.2)',
+        fill: true,
+        borderWidth: 2,
+        pointRadius: 0,
       };
       if (e.data.length > 0) {
+        e.data.sort((a, b) => a.x.localeCompare(b.x));
+        if (e.data.some((item) => item.y !== 0)) {
           datasets.push(e);
+        }
       }
 
-      var lineStyle =`rgba(0, 0, 0, 0.8)`
+      let lineStyle = 'rgba(0, 0, 0, 0.8)';
       if (getStyle() === 'dark') {
-         lineStyle = `rgba(238, 238, 236, 0.8)`
+        lineStyle = 'rgba(238, 238, 236, 0.8)';
       }
 
       const s = {
-          label: "Savings",
-          data: savingsData,
-          borderColor: lineStyle,
-          fill: false,
-          borderWidth: 2,
-          pointRadius: 0,
+        label: 'Savings',
+        data: savingsData,
+        borderColor: lineStyle,
+        fill: false,
+        borderWidth: 2,
+        pointRadius: 0,
       };
       if (s.data.length > 0) {
-          datasets.push(s);
+        s.data.sort((a, b) => a.x.localeCompare(b.x));
+        datasets.push(s);
       }
       const sr = {
-          label: "Savings Rate",
-          data: savingsRateData,
-          borderColor: lineStyle,
-          fill: false,
-          borderWidth: 2,
-          pointRadius: 0,
+        label: 'Savings Rate',
+        data: savingsRateData,
+        borderColor: lineStyle,
+        fill: false,
+        borderWidth: 2,
+        pointRadius: 0,
       };
-      if (s.data.length > 0) {
-          datasets.push(sr);
+      if (sr.data.length > 0) {
+        sr.data.sort((a, b) => a.x.localeCompare(b.x));
+        datasets.push(sr);
       }
 
       // Create a new Chart.js instance
@@ -648,22 +660,22 @@ function createChartDiv(claseName) {
 }
 
 function unloadCharts() {
-    const tmCharts = document.querySelectorAll('[class*=TM_CHARTS]');
-    if(tmCharts.length > 0) {
-      for (let i = 0; i < tmCharts.length; i += 1) {
-        tmCharts[i].remove();
-      }
+  const tmCharts = document.querySelectorAll('[class*=TM_CHARTS]');
+  if (tmCharts.length > 0) {
+    for (let i = 0; i < tmCharts.length; i += 1) {
+      tmCharts[i].remove();
     }
+  }
 }
 
 document.addEventListener('keydown', (event) => {
-   console.log(event);
-   if (event.ctrlKey === true && event.key === 'l') {
-       // ctrl + l: toogle between log and liner
-       localStorage['tm:YChartType'] = localStorage['tm:YChartType'] === "logarithmic" ? "linear" : "logarithmic";
-       console.log(localStorage['tm:YChartType']);
-       unloadCharts();
-   }
+  console.log(event);
+  if (event.ctrlKey === true && event.key === 'l') {
+    // ctrl + l: toogle between log and liner
+    localStorage['tm:YChartType'] = localStorage['tm:YChartType'] === 'logarithmic' ? 'linear' : 'logarithmic';
+    console.log(localStorage['tm:YChartType']);
+    unloadCharts();
+  }
 });
 
 (function () {
@@ -671,7 +683,7 @@ document.addEventListener('keydown', (event) => {
     if (window.location.pathname === '/dashboard' && (document.querySelectorAll('[class*=TM_CHARTS]').length === 0 || localStorage['tm:DarkLightMode'] !== getStyle())) {
       const injectionInterval = setInterval(() => {
         if (localStorage['tm:DarkLightMode'] !== getStyle()) {
-            unloadCharts();
+          unloadCharts();
         }
         // only run the injectionInterval once
         clearInterval(injectionInterval);
@@ -691,7 +703,7 @@ document.addEventListener('keydown', (event) => {
     } else if (window.location.pathname === '/accounts' && (document.querySelectorAll('[class*=TM_CHARTS]').length === 0 || localStorage['tm:DarkLightMode'] !== getStyle())) {
       const injectionInterval = setInterval(() => {
         if (localStorage['tm:DarkLightMode'] !== getStyle()) {
-            unloadCharts();
+          unloadCharts();
         }
         // only run the injectionInterval once
         clearInterval(injectionInterval);
@@ -704,13 +716,13 @@ document.addEventListener('keydown', (event) => {
 
         localStorage['tm:DarkLightMode'] = getStyle();
       }, 1000);
-    }
-    else if (window.location.pathname === '/cash-flow'
-             && (document.querySelectorAll('[class*=TM_CHARTS]').length === 0 || localStorage['tm:DarkLightMode'] !== getStyle())
-             || (window.location.pathname === '/cash-flow' && localStorage['tm:CashFlowSearch'] !== window.location.search)) {
+    } else if ((window.location.pathname === '/cash-flow' || window.location.pathname?.includes('/categories/'))
+             && ((document.querySelectorAll('[class*=TM_CHARTS]').length === 0 || localStorage['tm:DarkLightMode'] !== getStyle())
+             || ((window.location.pathname === '/cash-flow' || window.location.pathname?.includes('/categories/'))
+                && localStorage['tm:CashFlowSearch'] !== window.location.search))) {
       const injectionInterval = setInterval(() => {
         if (localStorage['tm:DarkLightMode'] !== getStyle() || localStorage['tm:CashFlowSearch'] !== window.location.search) {
-            unloadCharts();
+          unloadCharts();
         }
         // only run the injectionInterval once
         clearInterval(injectionInterval);
@@ -719,7 +731,13 @@ document.addEventListener('keydown', (event) => {
 
         const [cashFlowAggregatesCanvas, cashFlowAggregatesDiv] = createChartDiv('TM_cashFlowAggregates');
         scrollRoot.insertBefore(cashFlowAggregatesDiv, scrollRoot.children[0]);
-        drawCashFlowAggregates(cashFlowAggregatesCanvas, getSearchParam("timeframe"), getSearchParam("accounts")?.split(","), getSearchParam("tags")?.split(","));
+        drawCashFlowAggregates(
+          cashFlowAggregatesCanvas,
+          getSearchParam('timeframe'),
+          getSearchParam('accounts')?.split(','),
+          getSearchParam('tags')?.split(','),
+          window.location.pathname?.split('/')[2],
+        );
 
         localStorage['tm:DarkLightMode'] = getStyle();
         localStorage['tm:CashFlowSearch'] = window.location.search;
