@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         Monarch Money (Charts)
 // @namespace    http://tampermonkey.net/
-// @version      0.24.0
+// @version      0.25.0
 // @description  Additional trend charts added to Monarch Money's dashboard page.
 // @author       William T. Wissemann
 // @match        https://app.monarchmoney.com/*
+// @match        https://app.monarch.com/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=monarchmoney.com
 // @grant        none
 // @run-at       document-idle
@@ -15,7 +16,7 @@
 // @require      https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js
 // ==/UserScript==
 
-const graphql = 'https://api.monarchmoney.com/graphql';
+const graphql = 'https://api.monarch.com/graphql';
 const START_DATE = '2010-01-01';
 var cashFlowSearch = undefined;
 
