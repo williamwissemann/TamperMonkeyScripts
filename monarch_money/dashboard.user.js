@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Monarch Money (Charts)
 // @namespace    http://tampermonkey.net/
-// @version      0.25.0
+// @version      0.26.0
 // @description  Additional trend charts added to Monarch Money's dashboard page.
 // @author       William T. Wissemann
 // @match        https://app.monarchmoney.com/*
@@ -30,6 +30,7 @@ function accountTypeToColor(accountType, alpha) {
     'Real Estate': `rgba(153, 102, 255, ${alpha})`, // purple
     Valuables: `rgba(201, 203, 207, ${alpha})`, // gray
     Vehicles: `rgba(55, 162, 235, ${alpha})`, // blue
+    Equity: `rgba(55, 162, 235, ${alpha})`, // blue
   };
 
   return lookup[accountType];
@@ -199,6 +200,19 @@ async function getAccountPageRecentBalance() {
 function recentBalancesMerge(data, label) {
   let offset = 0;
   const date = new Date(START_DATE);
+  if (data.length === 0){
+      return {
+      label,
+      data: null,
+      borderColor: accountTypeToColor(label, '255'),
+      backgroundColor: accountTypeToColor(label, '0.2'),
+      borderWidth: 1,
+      fill: true,
+      pointRadius: 0,
+      hidden: !['Net Worth', 'Investments', 'Cash'].includes(label),
+    };
+  }
+
   const dataset = {
     label,
     data: data[0].recentBalances.map((item) => {
@@ -213,7 +227,15 @@ function recentBalancesMerge(data, label) {
     pointRadius: 0,
     hidden: !['Net Worth', 'Investments', 'Cash'].includes(label),
   };
+
+
+
   for (let i = 1; i < data.length; i += 1) {
+    if (data[i].recentBalances === undefined) {
+      console.log(data[i])
+      continue;
+    }
+
     for (let j = 0; j < data[i].recentBalances.length; j += 1) {
       const val = data[i].recentBalances[j];
       if (dataset.data[j].y === undefined) {
@@ -610,7 +632,11 @@ function drawNetworthChart(chart) {
         const datasets = [];
         datasets.push(recentBalancesMerge(data, 'Net Worth'));
         for (let i = 0; i < accountTypes.length; i += 1) {
-          datasets.push(recentBalancesMerge(data.filter((object) => [accountTypes[i]].includes(object.type)), accountTypes[i]));
+          accountTypeData = recentBalancesMerge(data.filter((object) => [accountTypes[i]].includes(object.type)), accountTypes[i])
+          if (accountTypeData.data === null) {
+            accountTypeData.data = new Array(datasets[0].data.length).fill(0);
+          }
+          datasets.push(accountTypeData);
         }
 
         for (let i = 0; i < datasets.length; i += 1) {
