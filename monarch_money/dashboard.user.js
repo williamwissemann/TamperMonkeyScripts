@@ -57,17 +57,31 @@ function getStyle() {
 function getGraphqlToken() {
   return JSON.parse(JSON.parse(localStorage.getItem('persist:root')).user).token;
 }
+
+function getSessionId() {
+  return JSON.parse(localStorage.getItem('gist.web.sessionId')).value;
+}
+
+function getCookie (name) {
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? match[2] : null;
+}
+
 function createGraphOption(data) {
+  const csrf = getCookie('csrftoken');
+
   return {
     mode: 'cors',
     method: 'POST',
     headers: {
+      'x-csrftoken': csrf,
       accept: '*/*',
-      authorization: `Token ${getGraphqlToken()}`,
       'content-type': 'application/json',
       origin: 'https://app.monarchmoney.com',
+      cookie: document.cookie,
     },
     body: JSON.stringify(data),
+    credentials: 'include',
   };
 }
 
